@@ -48,9 +48,9 @@ public class Main {
 							"     ||      ",
 							"     []      "}};
 		Enemy[] enemies = {new Enemy("Zombie", 100, 7), 
-						   new Enemy("Skeleton", 80, 10), 
-						   new Enemy("Spider", 60, 40),
-						   new Enemy("Barbarian", 100, 20)};
+						   new Enemy("Skeleton", 80, 4), 
+						   new Enemy("Spider", 60, 7),
+						   new Enemy("Barbarian", 100, 5)};
 		boolean running = true;
 				
 		//game objects
@@ -94,24 +94,87 @@ public class Main {
 			}
 		}
 		running = true;
-		System.out.println("What will you do?");
-		System.out.println("1. Continue and fight; 2. Check inventory; 3. Back out; 4. Use a health potion");
+		boolean dead = false;
 		while (running) {
+			if (dead) {
+				break;
+			}
+			System.out.println("What will you do?");
+			System.out.println("1. Continue and fight; 2. Check inventory; 3. Back out; 4. Use a health potion");
 			String choice = IN.next();
 			if (choice.equals("1")) {
-				System.out.println((rand.nextInt(5)+1) + " " + enemies[player.getPosition()-1].getType() + "s have appeared.");
+				int numEnemies = rand.nextInt(5)+1;
+				Enemy enemy = enemies[player.getPosition()-1];
+				int enemyOrigHealth = enemy.getHealth();
+				boolean fight = true;
+				System.out.println(numEnemies + " " + enemy.getType() + "s have appeared.");
+				while (fight) {
+					if (dead) {
+						break;
+					}
+					System.out.println("1. Fight; 2. Check inventory; 3. Flee; 4. Use a health potion");
+					String option = IN.next();
+					if (option.equals("1")) {
+						while (numEnemies > 0) {
+							if (dead) {
+								break;
+							}
+							while (enemy.getHealth() > 0) {
+								int damageDone = player.getWeapon().getAttackDamage()+10;
+								int receivingDamage = enemy.getDamage();
+								enemy.setHealth(enemy.getHealth() - damageDone);
+								System.out.println("You attack, dealing " + damageDone + " damage. The enemy has " + enemy.getHealth() + " health left.");
+								player.setHealth(player.getHealth() - receivingDamage);
+								System.out.println("You sustain " + receivingDamage + " damage from the enemy. You have " + player.getHealth() + " health left.");
+								if (player.getHealth() <= 0) {
+									System.out.println("Game Over, you died.");
+									dead = true;
+									break;
+								}
+								if (enemy.getHealth() <= 0) {
+									System.out.println("You defeated and enemy");
+									numEnemies -= 1;
+								}
+							}
+							enemy.setHealth(enemyOrigHealth);
+							if (numEnemies <= 0) {
+								int coinsEarned = rand.nextInt(200);
+								int healthPotionsEarned = rand.nextInt(5);
+								System.out.println("You've beaten the dungeon!");
+								System.out.println("From this room you have earned: ");
+								System.out.println(coinsEarned + " coins.");
+								System.out.println(healthPotionsEarned + " health potions.");
+								System.out.println("You leave the dungeon with your riches.");
+								fight = false;
+								running = false;
+							}
+						}
+					}
+					else if (option.equals("2")) {
+						player.checkInventory();
+					}
+					else if (option.equals("3")) {
+						System.out.println("You leave the dungeon, the door closing behind you having you unable to return.");
+						fight = false;
+						running = false;
+					}
+					else if (option.equals("4")) {
+						player.useHealthPotion();
+					}
+				}
 			}
 			else if (choice.equals("2")) {
 				player.checkInventory();
-				running = false;
 			}
 			else if (choice.equals("3")) {
 				player.setPosition(0);
+				System.out.println("You find yourself out of the dungeon, running away like a coward.");
+				System.out.println("You escape while your inventory looks like this: ");
+				player.checkInventory();
 				running = false;
 			}
 			else if (choice.equals("4")) {
 				player.useHealthPotion();
-				running = false;
 			}
 			else {
 				System.out.println("Invalid Command, try again:");
